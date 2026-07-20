@@ -83,7 +83,7 @@
         <button class="btn btn-primary btn-sm" onclick="testConnection()">🔌 সংযোগ পরীক্ষা করুন</button>
       </div>
       <div id="connStatus" style="margin-top:10px; font-size:13px;"><span class="status-dot status-wait"></span>সংযুক্ত নয়</div>
-      <div class="hint">টিপ: প্রতিবার URL টাইপ এড়াতে চাইলে এই ফাইলের &lt;script&gt; ট্যাগের শুরুতে থাকা <code>DEFAULT_WEBAPP_URL</code> এ আপনার URL স্থায়ীভাবে বসিয়ে ফাইলটি সবার সাথে শেয়ার করুন।</div>
+      
     </div>
 
     <div class="card">
@@ -746,14 +746,13 @@ async function startScanning(){
     html5QrCode = new Html5Qrcode('qrReader');
     try{
       // প্রথমে রিয়ার ক্যামেরা (facingMode) দিয়ে চেষ্টা
-      // width/height ideal ও focusMode:continuous যোগ করা হয়েছে — কম রেজোলিউশন ও অটোফোকাস বন্ধ থাকার কারণে
-      // অনেক ফোনে ছবি ঝাপসা (blur) আসছিল, তাতে QR পড়া যাচ্ছিল না।
+      // width/height ideal যোগ করা হয়েছে যাতে ভালো রেজোলিউশন পাওয়া যায় (blur কমাতে সাহায্য করে)।
+      // focusMode:continuous বাদ দেওয়া হয়েছে — অনেক ফোনের ব্রাউজারে এটা সাপোর্টেড না থাকায় পুরো ক্যামেরা রিকোয়েস্টই ব্যর্থ হয়ে যাচ্ছিল।
       await html5QrCode.start(
         {
           facingMode: { exact: 'environment' },
           width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          advanced: [{ focusMode: 'continuous' }]
+          height: { ideal: 1080 }
         },
         { fps: 15, qrbox: function(vw, vh){ const size = Math.floor(Math.min(vw, vh) * 0.75); return { width: size, height: size }; } },
         onScanSuccess,
@@ -769,8 +768,7 @@ async function startScanning(){
         {
           deviceId: { exact: rear.id },
           width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          advanced: [{ focusMode: 'continuous' }]
+          height: { ideal: 1080 }
         },
         { fps: 15, qrbox: function(vw, vh){ const size = Math.floor(Math.min(vw, vh) * 0.75); return { width: size, height: size }; } },
         onScanSuccess,
