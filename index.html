@@ -83,15 +83,15 @@
         <button class="btn btn-primary btn-sm" onclick="testConnection()">🔌 সংযোগ পরীক্ষা করুন</button>
       </div>
       <div id="connStatus" style="margin-top:10px; font-size:13px;"><span class="status-dot status-wait"></span>সংযুক্ত নয়</div>
-      
+      <div class="hint">টিপ: প্রতিবার URL টাইপ এড়াতে চাইলে এই ফাইলের &lt;script&gt; ট্যাগের শুরুতে থাকা <code>DEFAULT_WEBAPP_URL</code> এ আপনার URL স্থায়ীভাবে বসিয়ে ফাইলটি সবার সাথে শেয়ার করুন।</div>
     </div>
 
     <div class="card">
-      <h2>Define Yourself</h2>
-      <button class="landing-btn" onclick="enterAdmin()">🛠️ Admin
+      <h2>আপনি কে?</h2>
+      <button class="landing-btn" onclick="enterAdmin()">🛠️ অ্যাডমিন প্যানেল
         <span class="sub">পরীক্ষা সেটআপ, রোল নম্বর নির্ধারণ, উপস্থিতি ড্যাশবোর্ড</span>
       </button>
-      <button class="landing-btn" onclick="enterScanner()">📷 Invigilator
+      <button class="landing-btn" onclick="enterScanner()">📷 ইনভিজিলেটর — QR স্ক্যানার
         <span class="sub">পরীক্ষার কক্ষে শিক্ষার্থীদের এডমিট কার্ডের QR স্ক্যান করে উপস্থিতি নিন</span>
       </button>
     </div>
@@ -111,7 +111,7 @@
       </div>
       <div id="expectedFields" style="margin-top:14px;"></div>
       <div class="row-actions">
-        <button class="btn btn-primary" onclick="saveExamConfig()">সংরক্ষণ করুন</button>
+        <button class="btn btn-primary" onclick="saveExamConfig()">সংরক্ষণ করুন (গুগল শিট তৈরি হবে)</button>
       </div>
     </div>
 
@@ -277,7 +277,7 @@ function goHome(){
 
 async function enterAdmin(){
   if(!ensureUrl()) return;
-  const pass = prompt('🔒 Admin Password:');
+  const pass = prompt('🔒 অ্যাডমিন পাসওয়ার্ড দিন:');
   if(pass === null) return; // ব্যবহারকারী বাতিল করেছে
   if(!pass.trim()){ alert('পাসওয়ার্ড খালি রাখা যাবে না।'); return; }
   let check;
@@ -746,8 +746,15 @@ async function startScanning(){
     html5QrCode = new Html5Qrcode('qrReader');
     try{
       // প্রথমে রিয়ার ক্যামেরা (facingMode) দিয়ে চেষ্টা
+      // width/height ideal ও focusMode:continuous যোগ করা হয়েছে — কম রেজোলিউশন ও অটোফোকাস বন্ধ থাকার কারণে
+      // অনেক ফোনে ছবি ঝাপসা (blur) আসছিল, তাতে QR পড়া যাচ্ছিল না।
       await html5QrCode.start(
-        { facingMode: { exact: 'environment' } },
+        {
+          facingMode: { exact: 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          advanced: [{ focusMode: 'continuous' }]
+        },
         { fps: 15, qrbox: function(vw, vh){ const size = Math.floor(Math.min(vw, vh) * 0.75); return { width: size, height: size }; } },
         onScanSuccess,
         ()=>{ /* no-QR-found frames — ignore */ }
@@ -759,7 +766,12 @@ async function startScanning(){
       if(!cams || cams.length===0) throw new Error('কোনো ক্যামেরা পাওয়া যায়নি');
       const rear = cams.find(c => /back|rear|environment/i.test(c.label)) || cams[cams.length-1];
       await html5QrCode.start(
-        rear.id,
+        {
+          deviceId: { exact: rear.id },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          advanced: [{ focusMode: 'continuous' }]
+        },
         { fps: 15, qrbox: function(vw, vh){ const size = Math.floor(Math.min(vw, vh) * 0.75); return { width: size, height: size }; } },
         onScanSuccess,
         ()=>{}
