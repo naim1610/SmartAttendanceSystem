@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>স্মার্ট এটেনডেন্স সিস্টেম</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#122a4d; --navy2:#1b3a66; --gold:#c99a3c; --gold2:#e6c165;
+    --green:#1e7a3d; --green-bg:#e6f4ea; --orange:#c9760f; --red:#b8362f; --red-bg:#fceceb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Noto Sans Bengali','Hind Siliguri',Arial,sans-serif; background:#eef1f6; color:#1c2430; min-height:100vh;}
+  .topbar{background:linear-gradient(90deg,var(--navy),var(--navy2)); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,.15);}
+  .topbar h1{font-size:17px; margin:0;}
+  .topbar button{background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); padding:6px 12px; border-radius:6px; font-size:12.5px; cursor:pointer;}
+  .wrap{max-width:900px; margin:0 auto; padding:18px 14px 60px;}
+  .card{background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 14px rgba(20,30,60,.08); margin-bottom:16px; border:1px solid #eceff4;}
+  .card h2{margin-top:0; font-size:16px; color:var(--navy); border-bottom:2px solid var(--gold2); padding-bottom:9px;}
+  label{display:block; font-size:13px; font-weight:600; margin:10px 0 5px;}
+  input[type=text], input[type=date], input[type=number], select, textarea{
+    width:100%; padding:9px 11px; border:1.5px solid #d6dae2; border-radius:8px; font-size:14px; font-family:inherit; background:#fbfcfe;
+  }
+  input:focus, select:focus, textarea:focus{outline:none; border-color:var(--navy2); background:#fff;}
+  .btn{display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:8px; border:none; font-size:14px; font-weight:700; cursor:pointer;}
+  .btn-primary{background:var(--navy); color:#fff;}
+  .btn-gold{background:var(--gold); color:#3a2a05;}
+  .btn-outline{background:#fff; color:var(--navy); border:1.5px solid var(--navy);}
+  .btn-danger{background:var(--red); color:#fff;}
+  .btn-sm{padding:7px 13px; font-size:12.5px;}
+  .btn[disabled]{opacity:.5; cursor:not-allowed;}
+  .row-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+  .hint{font-size:12px; color:#8a8a8a; margin-top:5px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:0 14px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  .chk-row{display:flex; gap:18px; margin-top:6px; flex-wrap:wrap;}
+  .chk-row label{display:flex; align-items:center; gap:6px; font-weight:600; font-size:14px; margin:0;}
+  .chk-row input{width:auto;}
+  .landing-btn{display:block; width:100%; text-align:left; padding:20px; border-radius:12px; border:1.5px solid #dfe4ee; background:#fff; margin-bottom:12px; cursor:pointer; font-size:15px; font-weight:700; color:var(--navy);}
+  .landing-btn .sub{display:block; font-size:12.5px; font-weight:400; color:#777; margin-top:4px;}
+  .landing-btn:hover{border-color:var(--navy2); background:#f7f9fd;}
+  .status-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px;}
+  .status-ok{background:var(--green);} .status-bad{background:var(--red);} .status-wait{background:#ccc;}
+  table{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;}
+  th, td{padding:7px 8px; border-bottom:1px solid #eee; text-align:left;}
+  th{color:#666; font-size:11.5px; text-transform:uppercase;}
+  .subject-card{border:1px solid #e5e8f0; border-radius:10px; padding:14px; margin-bottom:12px; background:#fafbfd;}
+  .subject-card h3{margin:0 0 8px; font-size:14px; color:var(--navy2);}
+  .badge{padding:3px 9px; border-radius:10px; font-size:11px; font-weight:700; color:#fff;}
+  #qrReader{width:100%; max-width:420px; margin:0 auto; border-radius:10px; overflow:hidden;}
+  .scan-list-item{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-bottom:1px solid #f0f0f0; font-size:13.5px;}
+  .scan-list-item .del{color:var(--red); cursor:pointer; font-weight:800; padding:2px 8px;}
+  .banner{padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:12px;}
+  .banner-warn{background:#fff3ee; color:#7a3a1a; border:1px solid #f3c8b3;}
+  .banner-ok{background:var(--green-bg); color:var(--green); border:1px solid #bfe3c9;}
+  .banner-err{background:var(--red-bg); color:var(--red); border:1px solid #f0c2be;}
+  .confirm-box{background:var(--red-bg); border:1.5px solid #f0c2be; border-radius:10px; padding:14px;}
+  .subject-chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{display:inline-flex; align-items:center; gap:6px; background:#eef1fa; border:1px solid #dbe1f0; padding:6px 10px; border-radius:16px; font-size:12.5px;}
+  .chip .x{cursor:pointer; color:var(--red); font-weight:800; padding:0 2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1 id="topTitle">স্মার্ট এটেনডেন্স সিস্টেম</h1>
+  <button id="backBtn" onclick="goHome()" style="display:none;">🏠 হোম</button>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ LANDING / MODE SELECT ============ -->
+  <div id="landing">
+    <div class="card">
+      <h2>Web App সংযোগ</h2>
+      <label>Google Apps Script Web App URL</label>
+      <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      <div class="row-actions">
+        <button class="btn btn-primary btn-sm" onclick="testConnection()">🔌 সংযোগ পরীক্ষা করুন</button>
+      </div>
+      <div id="connStatus" style="margin-top:10px; font-size:13px;"><span class="status-dot status-wait"></span>সংযুক্ত নয়</div>
+      <div class="hint">টিপ: প্রতিবার URL টাইপ এড়াতে চাইলে এই ফাইলের &lt;script&gt; ট্যাগের শুরুতে থাকা <code>DEFAULT_WEBAPP_URL</code> এ আপনার URL স্থায়ীভাবে বসিয়ে ফাইলটি সবার সাথে শেয়ার করুন।</div>
+    </div>
+
+    <div class="card">
+      <h2>আপনি কে?</h2>
+      <button class="landing-btn" onclick="enterAdmin()">🛠️ অ্যাডমিন প্যানেল
+        <span class="sub">পরীক্ষা সেটআপ, রোল নম্বর নির্ধারণ, উপস্থিতি ড্যাশবোর্ড</span>
+      </button>
+      <button class="landing-btn" onclick="enterScanner()">📷 ইনভিজিলেটর — QR স্ক্যানার
+        <span class="sub">পরীক্ষার কক্ষে শিক্ষার্থীদের এডমিট কার্ডের QR স্ক্যান করে উপস্থিতি নিন</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ ADMIN PANEL ============ -->
+  <div id="adminPanel" style="display:none;">
+
+    <div class="card">
+      <h2>ধাপ ১: পরীক্ষার নাম ও বর্ষ</h2>
+      <label class="req">পরীক্ষার নাম</label>
+      <input type="text" id="examName" placeholder="যেমন: বার্ষিক পরীক্ষা ২০২৬">
+      <label>বর্ষ নির্বাচন</label>
+      <div class="chk-row">
+        <label><input type="checkbox" id="year1" value="১ম বর্ষ" checked> ১ম বর্ষ</label>
+        <label><input type="checkbox" id="year2" value="২য় বর্ষ" checked> ২য় বর্ষ</label>
+      </div>
+      <div id="expectedFields" style="margin-top:14px;"></div>
+      <div class="row-actions">
+        <button class="btn btn-primary" onclick="saveExamConfig()">সংরক্ষণ করুন (গুগল শিট তৈরি হবে)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>ধাপ ২: রোল নম্বর যুক্ত করুন</h2>
+      <div class="hint" style="margin-bottom:10px;">ধারাবাহিক রোলের জন্য রেঞ্জ ব্যবহার করুন, যেমন: <b>1-15,17,19-45</b></div>
+      <div id="rollSections"></div>
+    </div>
+
+    <div class="card">
+      <h2>উপস্থিতি ড্যাশবোর্ড</h2>
+      <div class="row-actions" style="margin-top:0;">
+        <button class="btn btn-outline btn-sm" onclick="loadSummary()">🔄 রিফ্রেশ করুন</button>
+      </div>
+      <div id="summaryWrap"><div class="hint">তথ্য লোড করতে রিফ্রেশ বাটনে ক্লিক করুন।</div></div>
+    </div>
+
+    <div class="card">
+      <h2>বিস্তারিত উপস্থিতি দেখুন</h2>
+      <div class="row-actions" style="margin-top:0;">
+        <select id="detailSelector" onchange="loadDetail()" style="max-width:260px;"></select>
+        <button class="btn btn-outline btn-sm" onclick="loadDetail()">🔄 রিফ্রেশ করুন</button>
+        <button class="btn btn-outline btn-sm" onclick="exportExcel()">📊 Excel এক্সপোর্ট</button>
+        <select id="pdfColumns" style="max-width:170px;" title="PDF-এ কতগুলো কলামে ভাগ করে ছাপাবে">
+          <option value="1">PDF: ১ কলাম</option>
+          <option value="2" selected>PDF: ২ কলাম</option>
+          <option value="3">PDF: ৩ কলাম</option>
+          <option value="4">PDF: ৪ কলাম</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="exportPDF()">🖨 PDF এক্সপোর্ট</button>
+      </div>
+      <div class="hint">প্রতিটি সেলের নিচে ছোট করে কক্ষ নম্বর দেখানো হয় — কোন রুম থেকে ডেটা এসেছে তা যাচাই করতে। শিক্ষার্থী বেশি হলে PDF-এ ২-৪ কলাম বেছে নিলে পাতা কমে যাবে; তারিখ-কলাম বেশি থাকলে কম কলাম বেছে নিন যাতে খুব সরু না হয়ে যায়।</div>
+      <div id="detailWrap" style="overflow-x:auto;"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="color:var(--red); border-bottom-color:#f0c2be;">⚠️ সব ডেটা মুছে ফেলুন</h2>
+      <p class="hint">এটি পরীক্ষার নাম, সব রোল তালিকা এবং সব উপস্থিতির রেকর্ড স্থায়ীভাবে মুছে দেবে। নতুন পরীক্ষার জন্য প্রস্তুত করতে চাইলেই কেবল এটি ব্যবহার করুন।</p>
+      <button class="btn btn-danger btn-sm" onclick="showDeleteConfirm()">সব ডেটা মুছে ফেলুন</button>
+      <div id="deleteConfirmBox" style="display:none; margin-top:12px;" class="confirm-box">
+        <p style="margin:0 0 8px; font-weight:700;">নিশ্চিত করতে নিচে টাইপ করুন: <code>মুছে ফেলুন</code></p>
+        <input type="text" id="deleteConfirmInput" placeholder="এখানে টাইপ করুন">
+        <div class="row-actions">
+          <button class="btn btn-danger btn-sm" onclick="doDeleteAll()">স্থায়ীভাবে মুছুন</button>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('deleteConfirmBox').style.display='none'">বাতিল</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ SCANNER PANEL ============ -->
+  <div id="scannerPanel" style="display:none;">
+
+    <div class="card" id="sessionCard">
+      <h2>সেশন তথ্য</h2>
+      <div class="grid2">
+        <div>
+          <label>তারিখ</label>
+          <input type="date" id="scanDate">
+        </div>
+        <div>
+          <label>কক্ষ / রুম নম্বর</label>
+          <input type="text" id="scanRoom" placeholder="যেমন: কক্ষ-৩">
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label>বর্ষ</label>
+          <select id="scanYear"></select>
+        </div>
+        <div>
+          <label>বিভাগ</label>
+          <select id="scanGroup">
+            <option value="বিজ্ঞান">বিজ্ঞান</option>
+            <option value="মানবিক">মানবিক</option>
+            <option value="ব্যবসায় শিক্ষা">ব্যবসায় শিক্ষা</option>
+          </select>
+        </div>
+      </div>
+      <label>এই কক্ষে মোট শিক্ষার্থী সংখ্যা</label>
+      <input type="number" min="1" id="scanTotal" placeholder="যেমন: 35">
+      <div class="row-actions">
+        <button class="btn btn-primary" onclick="startScanning()">📷 স্ক্যান শুরু করুন</button>
+      </div>
+    </div>
+
+    <div class="card" id="scanCard" style="display:none;">
+      <h2>QR স্ক্যান করুন</h2>
+      <div id="qrReader"></div>
+      <div id="scanBanner"></div>
+      <div class="row-actions">
+        <input type="text" id="manualRoll" placeholder="QR না পড়লে রোল নম্বর টাইপ করুন" style="max-width:220px;">
+        <button class="btn btn-outline btn-sm" onclick="addManualRoll()">+ যুক্ত করুন</button>
+        <button class="btn btn-outline btn-sm" onclick="stopScanning()">⏸ স্ক্যানার বন্ধ করুন</button>
+      </div>
+    </div>
+
+    <div class="card" id="listCard" style="display:none;">
+      <h2>স্ক্যান করা তালিকা — উপস্থিত (<span id="scanCount">0</span> জন)</h2>
+      <div id="scanList"></div>
+
+      <label style="margin-top:16px;">অনুপস্থিত রোল (কমা দিয়ে আলাদা করুন)</label>
+      <input type="text" id="absentRolls" placeholder="যেমন: 5,12,23" oninput="updateTally()">
+      <div class="hint" id="tallyHint"></div>
+
+      <div class="row-actions">
+        <button class="btn btn-gold" onclick="submitScans()">✅ সাবমিট করুন</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ==== একবার নিজে বসিয়ে পুরো ফাইল ইনভিজিলেটরদের সাথে শেয়ার করুন, তাহলে বারবার URL টাইপ করতে হবে না ====
+const DEFAULT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzJCP1HwbrKbtCr64mraCB5dyVHJ27tVUv0bL4NQ69sJu-PwgCkyVeFWAVcunenpHSDvA/exec";
+
+let WEBAPP_URL = DEFAULT_WEBAPP_URL;
+let cfg = { examName:'', years:[], expected:{}, groups:['বিজ্ঞান','মানবিক','ব্যবসায় শিক্ষা'] };
+let scannedList = []; // {roll, name, time}
+let html5QrCode = null;
+let scanning = false;
+
+document.getElementById('webAppUrl').value = DEFAULT_WEBAPP_URL;
+document.getElementById('scanDate').valueAsDate = new Date();
+
+// ---------- API HELPER ----------
+async function apiCall(payload){
+  if(!WEBAPP_URL){ throw new Error('আগে Web App URL সেট করুন।'); }
+  const res = await fetch(WEBAPP_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, // preflight এড়াতে text/plain ব্যবহার করা হয়েছে
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+
+async function testConnection(){
+  WEBAPP_URL = document.getElementById('webAppUrl').value.trim();
+  const box = document.getElementById('connStatus');
+  box.innerHTML = '<span class="status-dot status-wait"></span>পরীক্ষা করা হচ্ছে...';
+  try{
+    await apiCall({action:'ping'});
+    box.innerHTML = '<span class="status-dot status-ok"></span>সফলভাবে সংযুক্ত হয়েছে';
+  }catch(err){
+    box.innerHTML = '<span class="status-dot status-bad"></span>সংযোগ ব্যর্থ: ' + err.message;
+  }
+}
+
+// ---------- NAVIGATION ----------
+function goHome(){
+  stopScanning();
+  document.getElementById('landing').style.display='block';
+  document.getElementById('adminPanel').style.display='none';
+  document.getElementById('scannerPanel').style.display='none';
+  document.getElementById('backBtn').style.display='none';
+  document.getElementById('topTitle').textContent = 'স্মার্ট এটেনডেন্স সিস্টেম';
+}
+
+async function enterAdmin(){
+  if(!ensureUrl()) return;
+  const pass = prompt('🔒 অ্যাডমিন পাসওয়ার্ড দিন:');
+  if(pass === null) return; // ব্যবহারকারী বাতিল করেছে
+  if(!pass.trim()){ alert('পাসওয়ার্ড খালি রাখা যাবে না।'); return; }
+  let check;
+  try{
+    check = await apiCall({action:'adminAuth', password: pass});
+  }catch(err){
+    alert('পাসওয়ার্ড যাচাই করা যায়নি: ' + err.message);
+    return;
+  }
+  if(!check.ok){
+    alert('❌ ভুল পাসওয়ার্ড। অ্যাডমিন প্যানেলে প্রবেশাধিকার নেই।');
+    return;
+  }
+  document.getElementById('landing').style.display='none';
+  document.getElementById('adminPanel').style.display='block';
+  document.getElementById('backBtn').style.display='inline-block';
+  document.getElementById('topTitle').textContent = '🛠️ অ্যাডমিন প্যানেল';
+  await refreshConfigUI();
+}
+
+async function enterScanner(){
+  if(!ensureUrl()) return;
+  document.getElementById('landing').style.display='none';
+  document.getElementById('scannerPanel').style.display='block';
+  document.getElementById('backBtn').style.display='inline-block';
+  document.getElementById('topTitle').textContent = '📷 ইনভিজিলেটর — QR স্ক্যানার';
+  try{
+    cfg = await apiCall({action:'getConfig'});
+    const yearSel = document.getElementById('scanYear');
+    yearSel.innerHTML = (cfg.years.length ? cfg.years : ['১ম বর্ষ','২য় বর্ষ']).map(y=>`<option value="${y}">${y}</option>`).join('');
+  }catch(err){
+    alert('কনফিগারেশন লোড করা যায়নি: ' + err.message);
+  }
+}
+
+function ensureUrl(){
+  WEBAPP_URL = document.getElementById('webAppUrl').value.trim() || WEBAPP_URL;
+  if(!WEBAPP_URL){
+    alert('আগে Web App URL দিয়ে সংযোগ পরীক্ষা করে নিন।');
+    return false;
+  }
+  return true;
+}
+
+// ---------- ADMIN: CONFIG ----------
+function renderExpectedFields(){
+  const y1 = document.getElementById('year1').checked;
+  const y2 = document.getElementById('year2').checked;
+  const years = [];
+  if(y1) years.push('১ম বর্ষ');
+  if(y2) years.push('২য় বর্ষ');
+  const groups = ['বিজ্ঞান','মানবিক','ব্যবসায় শিক্ষা'];
+  let html = '<label>প্রতি বিভাগে প্রত্যাশিত পরীক্ষার্থী সংখ্যা (ঐচ্ছিক)</label>';
+  years.forEach(year=>{
+    html += `<div style="margin-bottom:6px; font-size:12.5px; font-weight:700; color:#555;">${year}</div><div class="grid2" style="margin-bottom:8px;">`;
+    groups.forEach(g=>{
+      const id = `exp_${year}_${g}`.replace(/\s/g,'_');
+      html += `<div><label style="font-weight:400; font-size:12.5px;">${g}</label><input type="number" min="0" id="${id}" placeholder="সংখ্যা"></div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('expectedFields').innerHTML = html || '<div class="hint">প্রথমে বর্ষ নির্বাচন করুন।</div>';
+}
+document.getElementById('year1').addEventListener('change', renderExpectedFields);
+document.getElementById('year2').addEventListener('change', renderExpectedFields);
+renderExpectedFields();
+
+async function saveExamConfig(){
+  const examName = document.getElementById('examName').value.trim();
+  const years = [];
+  if(document.getElementById('year1').checked) years.push('১ম বর্ষ');
+  if(document.getElementById('year2').checked) years.push('২য় বর্ষ');
+  if(!examName || years.length===0){
+    alert('পরীক্ষার নাম দিন এবং অন্তত একটি বর্ষ নির্বাচন করুন।');
+    return;
+  }
+  const groups = ['বিজ্ঞান','মানবিক','ব্যবসায় শিক্ষা'];
+  const expected = {};
+  years.forEach(year=>{
+    groups.forEach(g=>{
+      const id = `exp_${year}_${g}`.replace(/\s/g,'_');
+      const el = document.getElementById(id);
+      const v = el ? parseInt(el.value,10) : NaN;
+      if(!isNaN(v)) expected[year+'|'+g] = v;
+    });
+  });
+  try{
+    await apiCall({action:'saveConfig', examName, years, expected});
+    alert('সংরক্ষিত হয়েছে। গুগল শিটে ট্যাব তৈরি হয়ে গেছে।');
+    await refreshConfigUI();
+  }catch(err){
+    alert('সংরক্ষণ করা যায়নি: ' + err.message);
+  }
+}
+
+async function refreshConfigUI(){
+  try{
+    cfg = await apiCall({action:'getConfig'});
+  }catch(err){
+    alert('তথ্য লোড করা যায়নি: ' + err.message);
+    return;
+  }
+  document.getElementById('examName').value = cfg.examName || '';
+  document.getElementById('year1').checked = cfg.years.includes('১ম বর্ষ');
+  document.getElementById('year2').checked = cfg.years.includes('২য় বর্ষ');
+  renderExpectedFields();
+  Object.keys(cfg.expected||{}).forEach(k=>{
+    const [year,g] = k.split('|');
+    const id = `exp_${year}_${g}`.replace(/\s/g,'_');
+    const el = document.getElementById(id);
+    if(el) el.value = cfg.expected[k];
+  });
+  renderRollSections();
+  populateDetailSelector();
+}
+
+function renderRollSections(){
+  const wrap = document.getElementById('rollSections');
+  if(!cfg.years || cfg.years.length===0){
+    wrap.innerHTML = '<div class="hint">প্রথমে ধাপ ১ সম্পন্ন করুন।</div>';
+    return;
+  }
+  let html = '';
+  cfg.years.forEach(year=>{
+    cfg.groups.forEach(group=>{
+      const id = `${year}_${group}`.replace(/\s/g,'_');
+      html += `
+      <div class="subject-card">
+        <h3>${year} — ${group}</h3>
+        <input type="text" id="roll_${id}" placeholder="যেমন: 1-15,17,19-45">
+        <div class="row-actions" style="margin-top:8px;">
+          <button class="btn btn-outline btn-sm" onclick="submitRolls('${year}','${group}','${id}')">রোল যুক্ত করুন</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleRollEdit('${year}','${group}','${id}')">✏️ বর্তমান রোল দেখুন / এডিট করুন</button>
+        </div>
+        <div id="rollEdit_${id}" style="display:none; margin-top:10px;">
+          <div class="hint" style="margin-bottom:6px;">যে রোলগুলো বাদ দিতে চান তার পাশের × এ ক্লিক করুন। এতে সেই রোলের সব উপস্থিতি ডেটাও মুছে যাবে।</div>
+          <div id="rollChips_${id}" class="hint">লোড হচ্ছে...</div>
+        </div>
+      </div>`;
+    });
+  });
+  wrap.innerHTML = html;
+}
+
+async function toggleRollEdit(year, group, id){
+  const box = document.getElementById(`rollEdit_${id}`);
+  if(box.style.display === 'block'){ box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const chipsWrap = document.getElementById(`rollChips_${id}`);
+  chipsWrap.innerHTML = 'লোড হচ্ছে...';
+  try{
+    const res = await apiCall({action:'getRolls', year, group});
+    if(!res.rolls || res.rolls.length===0){
+      chipsWrap.innerHTML = '<span class="hint">এখনো কোনো রোল যুক্ত করা হয়নি।</span>';
+      return;
+    }
+    chipsWrap.innerHTML = `<div class="subject-chips">` + res.rolls.map(r=>`
+      <span class="chip">রোল ${r} <span class="x" onclick="deleteOneRoll('${year}','${group}','${id}','${r}')">×</span></span>
+    `).join('') + `</div>`;
+  }catch(err){
+    chipsWrap.innerHTML = '<div class="banner banner-err">লোড করা যায়নি: ' + err.message + '</div>';
+  }
+}
+
+async function deleteOneRoll(year, group, id, roll){
+  if(!confirm(`রোল ${roll} মুছে ফেলতে চান? এই রোলের সব উপস্থিতি ডেটাও মুছে যাবে।`)) return;
+  try{
+    await apiCall({action:'removeRolls', year, group, rolls:[roll]});
+    toggleRollEdit(year, group, id); // close
+    toggleRollEdit(year, group, id); // reopen refreshed
+    loadSummary();
+  }catch(err){
+    alert('মুছে ফেলা যায়নি: ' + err.message);
+  }
+}
+
+async function submitRolls(year, group, id){
+  const val = document.getElementById(`roll_${id}`).value.trim();
+  if(!val){ alert('রোল রেঞ্জ লিখুন।'); return; }
+  try{
+    const res = await apiCall({action:'setRolls', year, group, rollRanges: val});
+    alert(`${year} — ${group}: ${res.added} জন নতুন যুক্ত হয়েছে। মোট ${res.totalNow} জন।`);
+    document.getElementById(`roll_${id}`).value='';
+    loadSummary();
+    const editBox = document.getElementById(`rollEdit_${id}`);
+    if(editBox && editBox.style.display==='block'){ editBox.style.display='none'; toggleRollEdit(year, group, id); }
+  }catch(err){
+    alert('রোল যুক্ত করা যায়নি: ' + err.message);
+  }
+}
+
+
+// ---------- ADMIN: SUMMARY / DASHBOARD ----------
+async function loadSummary(){
+  const wrap = document.getElementById('summaryWrap');
+  wrap.innerHTML = '<div class="hint">লোড হচ্ছে...</div>';
+  try{
+    const data = await apiCall({action:'getSummary'});
+    if(!data.summary || data.summary.length===0){
+      wrap.innerHTML = '<div class="hint">এখনো কোনো ডেটা নেই।</div>';
+      return;
+    }
+    const allDates = new Set();
+    data.summary.forEach(s=>Object.keys(s.dates).forEach(d=>allDates.add(d)));
+    const dateList = Array.from(allDates).sort();
+    let html = '<table><tr><th>বর্ষ</th><th>বিভাগ</th><th>মোট রোল</th><th>প্রত্যাশিত</th>' + dateList.map(d=>`<th>${d}</th>`).join('') + '</tr>';
+    data.summary.forEach(s=>{
+      html += `<tr><td>${s.year}</td><td>${s.group}</td><td>${s.totalRolls}</td><td>${s.expected!==null?s.expected:'-'}</td>`;
+      dateList.forEach(d=>{ html += `<td>${s.dates[d]!==undefined ? s.dates[d] : '-'}</td>`; });
+      html += '</tr>';
+    });
+    html += '</table>';
+    wrap.innerHTML = html;
+  }catch(err){
+    wrap.innerHTML = '<div class="banner banner-err">লোড করা যায়নি: ' + err.message + '</div>';
+  }
+}
+
+function populateDetailSelector(){
+  const sel = document.getElementById('detailSelector');
+  let html = '<option value="">-- বর্ষ ও বিভাগ নির্বাচন করুন --</option>';
+  (cfg.years||[]).forEach(year=>{
+    cfg.groups.forEach(group=>{
+      html += `<option value="${year}|${group}">${year} — ${group}</option>`;
+    });
+  });
+  sel.innerHTML = html;
+}
+
+let lastDetailData = null; // {year, group, headers, rows, notes} — used for exports
+
+async function loadDetail(){
+  const val = document.getElementById('detailSelector').value;
+  const wrap = document.getElementById('detailWrap');
+  if(!val){ wrap.innerHTML=''; lastDetailData=null; return; }
+  const [year, group] = val.split('|');
+  wrap.innerHTML = '<div class="hint">লোড হচ্ছে...</div>';
+  try{
+    const data = await apiCall({action:'getAttendance', year, group});
+    lastDetailData = { year, group, headers: data.headers, rows: data.rows, notes: data.notes||[] };
+    if(!data.rows || data.rows.length===0){
+      wrap.innerHTML = '<div class="hint">এই বিভাগে এখনো কোনো রোল যুক্ত করা হয়নি।</div>';
+      return;
+    }
+    let html = '<table><tr>' + data.headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+    data.rows.forEach((r,ri)=>{
+      html += '<tr>' + r.map((c,i)=>{
+        if(i===0) return `<td>${c}</td>`;
+        if(!c) return '<td style="color:#ccc;">—</td>';
+        const note = (data.notes && data.notes[ri] && data.notes[ri][i]) || '';
+        const room = note.split('|')[0].trim();
+        const badgeColor = c === 'অনুপস্থিত' ? 'var(--red)' : 'var(--green)';
+        return `<td><span class="badge" style="background:${badgeColor};">${c}</span>${room?`<div style="font-size:10.5px;color:#888;margin-top:2px;">${room}</div>`:''}</td>`;
+      }).join('') + '</tr>';
+    });
+    html += '</table>';
+    wrap.innerHTML = html;
+  }catch(err){
+    wrap.innerHTML = '<div class="banner banner-err">লোড করা যায়নি: ' + err.message + '</div>';
+  }
+}
+
+// ---------- ADMIN: EXPORT ----------
+function exportExcel(){
+  if(!lastDetailData || !lastDetailData.rows.length){
+    alert('আগে বিস্তারিত উপস্থিতি লোড করুন (উপরে বর্ষ ও বিভাগ নির্বাচন করুন)।');
+    return;
+  }
+  if(typeof XLSX === 'undefined'){ alert('Excel লাইব্রেরি লোড হয়নি — ইন্টারনেট সংযোগ পরীক্ষা করুন।'); return; }
+  const { year, group, headers, rows, notes } = lastDetailData;
+  const aoa = [headers];
+  rows.forEach((r,ri)=>{
+    aoa.push(r.map((c,i)=>{
+      if(i===0 || !c) return c;
+      const note = (notes && notes[ri] && notes[ri][i]) || '';
+      const room = note.split('|')[0].trim();
+      return room ? `${c} (${room})` : c;
+    }));
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, (year+'-'+group).slice(0,30));
+  XLSX.writeFile(wb, `Attendance_${year}_${group}_${cfg.examName||''}.xlsx`.replace(/\s+/g,'_'));
+}
+
+async function exportPDF(){
+  if(!lastDetailData || !lastDetailData.rows.length){
+    alert('আগে বিস্তারিত উপস্থিতি লোড করুন (উপরে বর্ষ ও বিভাগ নির্বাচন করুন)।');
+    return;
+  }
+  if(typeof html2canvas === 'undefined' || !window.jspdf){ alert('PDF লাইব্রেরি লোড হয়নি — ইন্টারনেট সংযোগ পরীক্ষা করুন।'); return; }
+  try{
+    const numCols = parseInt(document.getElementById('pdfColumns').value, 10) || 1;
+    const { headers, rows, notes } = lastDetailData;
+
+    // পুরো টাইটেল + একাধিক পাশাপাশি কলাম-ব্লক একসাথে একটি অস্থায়ী কনটেইনারে বানিয়ে
+    // ছবি হিসেবে ক্যাপচার করা হচ্ছে — বাংলা লেখা সঠিকভাবে আসার জন্য (jsPDF-এর নিজস্ব
+    // ফন্ট বাংলা সাপোর্ট করে না), এবং একাধিক কলামে ভাগ করার ফলে পাতা সংখ্যা কমে আসে।
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed; left:-9999px; top:0; background:#ffffff; padding:24px; width:' + (numCols<=1?1100:numCols*430) + 'px; font-family:"Noto Sans Bengali","Hind Siliguri",Arial,sans-serif;';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:20px; font-weight:800; color:#122a4d; margin-bottom:4px; white-space:normal; word-break:break-word;';
+    title.textContent = cfg.examName || '';
+
+    const subtitle = document.createElement('div');
+    subtitle.style.cssText = 'font-size:14px; color:#555; margin-bottom:16px;';
+    subtitle.textContent = `${lastDetailData.year} — ${lastDetailData.group}  |  এক্সপোর্টের তারিখ: ${new Date().toLocaleDateString('bn-BD')}`;
+
+    container.appendChild(title);
+    container.appendChild(subtitle);
+
+    const flexWrap = document.createElement('div');
+    flexWrap.style.cssText = 'display:flex; gap:16px; align-items:flex-start;';
+
+    const perCol = Math.ceil(rows.length / numCols);
+    for(let c=0; c<numCols; c++){
+      const start = c*perCol, end = Math.min(start+perCol, rows.length);
+      if(start >= rows.length) break;
+      const blockRows = rows.slice(start, end);
+      const blockNotes = notes.slice(start, end);
+      const table = document.createElement('table');
+      table.style.cssText = 'border-collapse:collapse; font-size:11.5px; flex:1; min-width:0;';
+      let thead = '<tr>' + headers.map(h=>`<th style="border-bottom:2px solid #c99a3c; padding:4px 6px; text-align:left; color:#555; font-size:10px; text-transform:uppercase; white-space:nowrap;">${h}</th>`).join('') + '</tr>';
+      let tbody = '';
+      blockRows.forEach((r,ri)=>{
+        tbody += '<tr>' + r.map((cell,i)=>{
+          if(i===0) return `<td style="padding:4px 6px; border-bottom:1px solid #eee; font-weight:700;">${cell}</td>`;
+          if(!cell) return '<td style="padding:4px 6px; border-bottom:1px solid #eee; color:#ccc;">—</td>';
+          const note = (blockNotes[ri] && blockNotes[ri][i]) || '';
+          const room = note.split('|')[0].trim();
+          const color = cell === 'অনুপস্থিত' ? '#b8362f' : '#1e7a3d';
+          return `<td style="padding:4px 6px; border-bottom:1px solid #eee;">
+            <span style="background:${color}; color:#fff; border-radius:8px; padding:2px 7px; font-size:10px; font-weight:700; white-space:nowrap;">${cell}</span>
+            ${room?`<div style="font-size:9px; color:#888;">${room}</div>`:''}
+          </td>`;
+        }).join('') + '</tr>';
+      });
+      table.innerHTML = thead + tbody;
+      flexWrap.appendChild(table);
+    }
+    container.appendChild(flexWrap);
+    document.body.appendChild(container);
+
+    // পেজ ভাঙার সময় কোনো সারি যাতে দুই পাতায় কেটে না পড়ে, তাই সবচেয়ে লম্বা
+    // কলাম-ব্লকের (প্রথমটি, যেহেতু বাকি সব রোল সেখানেই বেশি থাকে) সারি সীমানা মাপা হচ্ছে
+    const firstTable = flexWrap.querySelector('table');
+    const rowEls = firstTable ? Array.from(firstTable.querySelectorAll('tr')) : [];
+    const rowBoundaries = rowEls.map(tr => tr.offsetTop + tr.offsetHeight);
+
+    const canvas = await html2canvas(container, {scale:2, backgroundColor:'#ffffff'});
+    document.body.removeChild(container);
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({orientation:'landscape', unit:'pt', format:'a4'});
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const usableW = pageW - margin*2;
+    const usableH = pageH - margin*2;
+    const scaleFactor = canvas.width / container.offsetWidth; // html2canvas scale (2)
+    const pdfScale = usableW / canvas.width;
+    const pageCapacityPx = usableH / pdfScale; // কত canvas-পিক্সেল একটি পেজে ধরবে
+
+    const boundariesPx = rowBoundaries.map(b => b * scaleFactor);
+
+    let sliceStart = 0;
+    let pageIndex = 0;
+    while(sliceStart < canvas.height){
+      let sliceEnd = Math.min(sliceStart + pageCapacityPx, canvas.height);
+      // যদি এই সীমানার মধ্যে কোনো সারি অর্ধেক কাটা পড়ে, তাহলে সবচেয়ে কাছের
+      // সম্পূর্ণ-সারি সীমানায় পিছিয়ে আনা হচ্ছে
+      if(sliceEnd < canvas.height){
+        const fitting = boundariesPx.filter(b => b > sliceStart && b <= sliceEnd);
+        if(fitting.length){
+          sliceEnd = fitting[fitting.length-1];
+        }
+      }
+      const sliceHeightPx = Math.max(1, Math.round(sliceEnd - sliceStart));
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeightPx;
+      const ctx = pageCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.drawImage(canvas, 0, sliceStart, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+      const imgData = pageCanvas.toDataURL('image/png');
+      if(pageIndex > 0) pdf.addPage();
+      pdf.addImage(imgData, 'PNG', margin, margin, usableW, sliceHeightPx * pdfScale);
+      sliceStart = sliceEnd;
+      pageIndex++;
+    }
+    pdf.save(`Attendance_${lastDetailData.year}_${lastDetailData.group}.pdf`.replace(/\s+/g,'_'));
+  }catch(err){
+    console.error(err);
+    alert('PDF তৈরি করা যায়নি: ' + err.message);
+  }
+}
+
+function showDeleteConfirm(){
+  document.getElementById('deleteConfirmBox').style.display='block';
+}
+async function doDeleteAll(){
+  const val = document.getElementById('deleteConfirmInput').value.trim();
+  if(val !== 'মুছে ফেলুন'){
+    alert('সঠিকভাবে "মুছে ফেলুন" টাইপ করুন।');
+    return;
+  }
+  try{
+    await apiCall({action:'deleteAll'});
+    alert('সব ডেটা মুছে ফেলা হয়েছে।');
+    document.getElementById('deleteConfirmBox').style.display='none';
+    document.getElementById('deleteConfirmInput').value='';
+    await refreshConfigUI();
+    document.getElementById('summaryWrap').innerHTML = '<div class="hint">এখনো কোনো ডেটা নেই।</div>';
+    document.getElementById('detailWrap').innerHTML = '';
+  }catch(err){
+    alert('মুছে ফেলা যায়নি: ' + err.message);
+  }
+}
+
+// ---------- SCANNER ----------
+function beep(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.12);
+  }catch(e){ /* ignore */ }
+}
+
+async function startScanning(){
+  const date = document.getElementById('scanDate').value;
+  const room = document.getElementById('scanRoom').value.trim();
+  const year = document.getElementById('scanYear').value;
+  const group = document.getElementById('scanGroup').value;
+  const total = parseInt(document.getElementById('scanTotal').value, 10);
+  if(!date || !room || !year || !group || !total || total<1){
+    alert('তারিখ, কক্ষ নম্বর, বর্ষ, বিভাগ ও মোট শিক্ষার্থী সংখ্যা — সব দিন।');
+    return;
+  }
+
+  // মোবাইল ব্রাউজার ক্যামেরা অ্যাক্সেসের জন্য "সিকিউর কনটেক্সট" (HTTPS বা localhost) আবশ্যক করে।
+  // file:// থেকে খোলা পেজে ডেস্কটপ Chrome কখনো কখনো অনুমতি দিলেও Android Chrome সাধারণত দেয় না।
+  if(!window.isSecureContext){
+    document.getElementById('scanCard').style.display='block';
+    document.getElementById('sessionCard').style.display='none';
+    document.getElementById('scanBanner').innerHTML = `<div class="banner banner-err">
+      ক্যামেরা চালু করা যায়নি — এই পেজটি সরাসরি ফাইল হিসেবে (file://) খোলা হয়েছে, যা মোবাইল ব্রাউজারে ক্যামেরা অনুমতি দেয় না।<br><br>
+      <b>সমাধান:</b> এই HTML ফাইলটি কোনো HTTPS ঠিকানায় হোস্ট করুন (যেমন GitHub Pages, Netlify, অথবা আপনার কলেজের ওয়েবসাইট) এবং সেই লিংক থেকে খুলুন। ডেস্কটপ পিসিতে ফাইল হিসেবে খুললে কাজ করতে পারে, কিন্তু ফোনে HTTPS আবশ্যক।
+    </div>`;
+    return;
+  }
+
+  document.getElementById('sessionCard').style.display='none';
+  document.getElementById('scanCard').style.display='block';
+  document.getElementById('listCard').style.display='block';
+  scannedList = [];
+  renderScanList();
+
+  try{
+    html5QrCode = new Html5Qrcode('qrReader');
+    try{
+      // প্রথমে রিয়ার ক্যামেরা (facingMode) দিয়ে চেষ্টা
+      await html5QrCode.start(
+        { facingMode: { exact: 'environment' } },
+        { fps: 10, qrbox: { width: 240, height: 240 } },
+        onScanSuccess,
+        ()=>{ /* no-QR-found frames — ignore */ }
+      );
+    }catch(innerErr){
+      console.error('facingMode দিয়ে ব্যর্থ, ক্যামেরা তালিকা থেকে চেষ্টা করা হচ্ছে:', innerErr);
+      // কিছু ফোনে facingMode:exact কাজ করে না — উপলব্ধ ক্যামেরার তালিকা থেকে বেছে নেওয়া হচ্ছে
+      const cams = await Html5Qrcode.getCameras();
+      if(!cams || cams.length===0) throw new Error('কোনো ক্যামেরা পাওয়া যায়নি');
+      const rear = cams.find(c => /back|rear|environment/i.test(c.label)) || cams[cams.length-1];
+      await html5QrCode.start(
+        rear.id,
+        { fps: 10, qrbox: { width: 240, height: 240 } },
+        onScanSuccess,
+        ()=>{}
+      );
+    }
+    scanning = true;
+  }catch(err){
+    const msg = (err && err.message) ? err.message : String(err);
+    let extra = '';
+    if(/permission/i.test(msg) || /NotAllowed/i.test(msg)){
+      extra = ' ব্রাউজারের ঠিকানা বারে ক্যামেরা আইকনে ক্লিক করে অনুমতি দিন, তারপর পেজ রিফ্রেশ করে আবার চেষ্টা করুন।';
+    } else if(/NotFound/i.test(msg)){
+      extra = ' এই ডিভাইসে কোনো ক্যামেরা খুঁজে পাওয়া যায়নি।';
+    }
+    document.getElementById('scanBanner').innerHTML = `<div class="banner banner-err">ক্যামেরা চালু করা যায়নি: ${msg}.${extra} নিচে ম্যানুয়ালি রোল যুক্ত করেও উপস্থিতি নেওয়া যাবে।</div>`;
+  }
+}
+
+function onScanSuccess(decodedText){
+  const year = document.getElementById('scanYear').value;
+  const group = document.getElementById('scanGroup').value;
+  let payload;
+  try{
+    payload = JSON.parse(decodedText);
+  }catch(e){
+    showScanBanner('banner-err', 'QR কোডটি এই সিস্টেমের ফরম্যাটে নয়।');
+    return;
+  }
+  const roll = payload.r, name = payload.n, dept = payload.d, ptYear = payload.y;
+  if(!roll){
+    showScanBanner('banner-err', 'QR কোডে রোল নম্বর পাওয়া যায়নি।');
+    return;
+  }
+  if(dept && dept !== group){
+    showScanBanner('banner-warn', `⚠️ ভুল বিভাগ! এডমিট কার্ডে "${dept}" লেখা, কিন্তু আপনি "${group}" নির্বাচন করেছেন। রোল ${roll} যুক্ত করা হয়নি।`);
+    return;
+  }
+  if(ptYear && ptYear !== year){
+    showScanBanner('banner-warn', `⚠️ ভুল বর্ষ! এডমিট কার্ডে "${ptYear}" লেখা, কিন্তু আপনি "${year}" নির্বাচন করেছেন। রোল ${roll} যুক্ত করা হয়নি।`);
+    return;
+  }
+  addScan(roll, name);
+}
+
+function addScan(roll, name){
+  if(scannedList.some(s=>String(s.roll)===String(roll))){
+    showScanBanner('banner-warn', `রোল ${roll} ইতিমধ্যে তালিকায় আছে।`);
+    return;
+  }
+  scannedList.push({roll, name: name||'', time: new Date().toLocaleTimeString('bn-BD')});
+  beep();
+  if(navigator.vibrate) navigator.vibrate(100);
+  showScanBanner('banner-ok', `✅ যুক্ত হয়েছে: রোল ${roll}${name?' — '+name:''}`);
+  renderScanList();
+}
+
+function showScanBanner(cls, msg){
+  const el = document.getElementById('scanBanner');
+  el.innerHTML = `<div class="banner ${cls}">${msg}</div>`;
+  setTimeout(()=>{ if(el.innerHTML.includes(msg)) el.innerHTML=''; }, 2500);
+}
+
+function addManualRoll(){
+  const input = document.getElementById('manualRoll');
+  const roll = input.value.trim();
+  if(!roll){ return; }
+  addScan(roll, '');
+  input.value = '';
+}
+
+function removeScan(roll){
+  scannedList = scannedList.filter(s=>String(s.roll)!==String(roll));
+  renderScanList();
+}
+
+function renderScanList(){
+  document.getElementById('scanCount').textContent = scannedList.length;
+  const wrap = document.getElementById('scanList');
+  if(scannedList.length===0){
+    wrap.innerHTML = '<div class="hint">এখনো কোনো শিক্ষার্থী স্ক্যান করা হয়নি।</div>';
+  } else {
+    wrap.innerHTML = scannedList.map(s=>`
+      <div class="scan-list-item">
+        <span>রোল <b>${s.roll}</b>${s.name?' — '+s.name:''} <span style="color:#999;">(${s.time})</span></span>
+        <span class="del" onclick="removeScan('${s.roll}')">×</span>
+      </div>`).join('');
+  }
+  updateTally();
+}
+
+function parseAbsentInput(){
+  const raw = document.getElementById('absentRolls').value.trim();
+  if(!raw) return [];
+  return raw.split(',').map(r=>r.trim()).filter(r=>r!=='');
+}
+
+// উপস্থিত + অনুপস্থিত মিলিয়ে মোট শিক্ষার্থী সংখ্যার সাথে মিলছে কিনা যাচাই করে
+function getTallyStatus(){
+  const total = parseInt(document.getElementById('scanTotal').value, 10) || 0;
+  const presentRolls = scannedList.map(s=>String(s.roll));
+  const absentRolls = parseAbsentInput();
+  const overlap = absentRolls.filter(r=>presentRolls.includes(String(r)));
+  const dupAbsent = absentRolls.filter((r,i)=>absentRolls.indexOf(r)!==i);
+  const sum = presentRolls.length + absentRolls.length;
+  return { total, presentCount: presentRolls.length, absentRolls, overlap, dupAbsent, sum, ok: total>0 && sum===total && overlap.length===0 && dupAbsent.length===0 };
+}
+
+function updateTally(){
+  const hint = document.getElementById('tallyHint');
+  if(!hint) return;
+  const t = getTallyStatus();
+  if(t.overlap.length){
+    hint.innerHTML = `<span style="color:var(--red); font-weight:700;">⚠️ রোল ${t.overlap.join(', ')} উপস্থিত তালিকায়ও আছে, অনুপস্থিতেও লেখা হয়েছে — ঠিক করুন।</span>`;
+  } else if(t.dupAbsent.length){
+    hint.innerHTML = `<span style="color:var(--red); font-weight:700;">⚠️ অনুপস্থিত তালিকায় রোল ${[...new Set(t.dupAbsent)].join(', ')} দুইবার লেখা হয়েছে।</span>`;
+  } else if(t.total===0){
+    hint.innerHTML = `<span style="color:#999;">সেশন তথ্যে মোট শিক্ষার্থী সংখ্যা দেওয়া হয়নি।</span>`;
+  } else if(t.sum === t.total){
+    hint.innerHTML = `<span style="color:var(--green); font-weight:700;">✅ মিলেছে — উপস্থিত ${t.presentCount} + অনুপস্থিত ${t.absentRolls.length} = মোট ${t.total}</span>`;
+  } else {
+    const diff = t.total - t.sum;
+    hint.innerHTML = `<span style="color:var(--red); font-weight:700;">⚠️ মিলছে না — উপস্থিত ${t.presentCount} + অনুপস্থিত ${t.absentRolls.length} = ${t.sum}, কিন্তু মোট হওয়ার কথা ${t.total} (${diff>0?diff+' জন কম আছে':(-diff)+' জন বেশি আছে'})। বাকি রোলগুলো অনুপস্থিত ঘরে যুক্ত করুন।</span>`;
+  }
+}
+
+async function stopScanning(){
+  if(html5QrCode && scanning){
+    try{ await html5QrCode.stop(); html5QrCode.clear(); }catch(e){ /* ignore */ }
+  }
+  scanning = false;
+  document.getElementById('sessionCard').style.display='block';
+  document.getElementById('scanCard').style.display='none';
+}
+
+async function submitScans(){
+  if(scannedList.length===0){ alert('কোনো শিক্ষার্থী স্ক্যান করা হয়নি।'); return; }
+  const t = getTallyStatus();
+  if(t.overlap.length){
+    alert(`রোল ${t.overlap.join(', ')} উপস্থিত ও অনুপস্থিত — দুই তালিকাতেই আছে। ঠিক করে আবার চেষ্টা করুন।`);
+    return;
+  }
+  if(t.dupAbsent.length){
+    alert(`অনুপস্থিত তালিকায় রোল ${[...new Set(t.dupAbsent)].join(', ')} দুইবার লেখা হয়েছে। ঠিক করে আবার চেষ্টা করুন।`);
+    return;
+  }
+  if(!t.ok){
+    alert(`উপস্থিত (${t.presentCount}) + অনুপস্থিত (${t.absentRolls.length}) = ${t.sum}, কিন্তু মোট শিক্ষার্থী সংখ্যা ${t.total}। বাকি রোলগুলো "অনুপস্থিত রোল" ঘরে যুক্ত না করা পর্যন্ত সাবমিট করা যাবে না।`);
+    return;
+  }
+  const date = document.getElementById('scanDate').value;
+  const room = document.getElementById('scanRoom').value.trim();
+  const year = document.getElementById('scanYear').value;
+  const group = document.getElementById('scanGroup').value;
+  try{
+    const res = await apiCall({
+      action:'submitAttendance', date, room, year, group,
+      time: new Date().toISOString(),
+      rolls: scannedList.map(s=>s.roll),
+      absentRolls: t.absentRolls
+    });
+    let msg = `সফলভাবে সাবমিট হয়েছে: উপস্থিত ${res.result.success.length} জন, অনুপস্থিত ${res.result.absent.length} জন।`;
+    if(res.result.notFound.length){
+      msg += `\n\nতালিকায় পাওয়া যায়নি এমন রোল (${group}/${year} শিটে নেই): ${res.result.notFound.join(', ')}`;
+    }
+    alert(msg);
+    await stopScanning();
+    scannedList = [];
+    renderScanList();
+    document.getElementById('scanRoom').value='';
+    document.getElementById('scanTotal').value='';
+    document.getElementById('absentRolls').value='';
+  }catch(err){
+    alert('সাবমিট করা যায়নি: ' + err.message + '\nইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন — তালিকা মুছে যায়নি।');
+  }
+}
+</script>
+</body>
+</html>
