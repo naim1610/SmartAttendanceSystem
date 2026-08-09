@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>স্মার্ট এটেনডেন্স সিস্টেম</title>
+<title>SMART ATTENDANCE SYSTEM</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -76,22 +76,22 @@
   <!-- ============ LANDING / MODE SELECT ============ -->
   <div id="landing">
     <div class="card">
-      <h2>Web App সংযোগ</h2>
-      <label>Google Apps Script Web App URL</label>
+      <h2>App Connection</h2>
+      <label>Web App URL [&#9888 Do not edit or change]</label>
       <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
       <div class="row-actions">
-        <button class="btn btn-primary btn-sm" onclick="testConnection()">🔌 সংযোগ পরীক্ষা করুন</button>
+        <button class="btn btn-primary btn-sm" onclick="testConnection()">Test connection ( under admin supervision )</button>
       </div>
-      <div id="connStatus" style="margin-top:10px; font-size:13px;"><span class="status-dot status-wait"></span>সংযুক্ত নয়</div>
-      <div class="hint">টিপ: প্রতিবার URL টাইপ এড়াতে চাইলে এই ফাইলের &lt;script&gt; ট্যাগের শুরুতে থাকা <code>DEFAULT_WEBAPP_URL</code> এ আপনার URL স্থায়ীভাবে বসিয়ে ফাইলটি সবার সাথে শেয়ার করুন।</div>
+      <div id="connStatus" style="margin-top:10px; font-size:13px;"><span class="status-dot status-wait"></span>Connected!!</div>
+      
     </div>
 
     <div class="card">
-      <h2>আপনি কে?</h2>
-      <button class="landing-btn" onclick="enterAdmin()">🛠️ অ্যাডমিন প্যানেল
+      <h2>Define Yourself</h2>
+      <button class="landing-btn" onclick="enterAdmin()">🛠️ Admin
         <span class="sub">পরীক্ষা সেটআপ, রোল নম্বর নির্ধারণ, উপস্থিতি ড্যাশবোর্ড</span>
       </button>
-      <button class="landing-btn" onclick="enterScanner()">📷 ইনভিজিলেটর — QR স্ক্যানার
+      <button class="landing-btn" onclick="enterScanner()">📷 Invigilator
         <span class="sub">পরীক্ষার কক্ষে শিক্ষার্থীদের এডমিট কার্ডের QR স্ক্যান করে উপস্থিতি নিন</span>
       </button>
     </div>
@@ -111,7 +111,7 @@
       </div>
       <div id="expectedFields" style="margin-top:14px;"></div>
       <div class="row-actions">
-        <button class="btn btn-primary" onclick="saveExamConfig()">সংরক্ষণ করুন (গুগল শিট তৈরি হবে)</button>
+        <button class="btn btn-primary" onclick="saveExamConfig()">সংরক্ষণ করুন</button>
       </div>
     </div>
 
@@ -238,7 +238,7 @@
 
 <script>
 // ==== একবার নিজে বসিয়ে পুরো ফাইল ইনভিজিলেটরদের সাথে শেয়ার করুন, তাহলে বারবার URL টাইপ করতে হবে না ====
-const DEFAULT_WEBAPP_URL = "";
+const DEFAULT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwds2_YxA13zUp8Ko9IAyjXcjDpl4MM1u8VvJ8xEQ6e58wL8DpCDzVrI9wt45jtNFobWA/exec";
 
 let WEBAPP_URL = DEFAULT_WEBAPP_URL;
 let adminPassword = ''; // সফল লগইনের পর মেমরিতে রাখা হয়, প্রতিটি অ্যাডমিন-অনুরোধে স্বয়ংক্রিয়ভাবে যুক্ত হয়
@@ -267,10 +267,10 @@ async function apiCall(payload){
 async function testConnection(){
   WEBAPP_URL = document.getElementById('webAppUrl').value.trim();
   const box = document.getElementById('connStatus');
-  box.innerHTML = '<span class="status-dot status-wait"></span>পরীক্ষা করা হচ্ছে...';
+  box.innerHTML = '<span class="status-dot status-wait"></span>Testing...';
   try{
     await apiCall({action:'ping'});
-    box.innerHTML = '<span class="status-dot status-ok"></span>সফলভাবে সংযুক্ত হয়েছে';
+    box.innerHTML = '<span class="status-dot status-ok"></span>Connected Successfully';
   }catch(err){
     box.innerHTML = '<span class="status-dot status-bad"></span>সংযোগ ব্যর্থ: ' + err.message;
   }
@@ -288,14 +288,14 @@ function goHome(){
 
 async function enterAdmin(){
   if(!ensureUrl()) return;
-  const pass = prompt('🔒 অ্যাডমিন পাসওয়ার্ড দিন:');
+  const pass = prompt('🔒 Admin Password:');
   if(pass === null) return; // ব্যবহারকারী বাতিল করেছে
   if(!pass.trim()){ alert('পাসওয়ার্ড খালি রাখা যাবে না।'); return; }
   let check;
   try{
     check = await apiCall({action:'adminLogin', adminPassword: pass});
   }catch(err){
-    alert('পাসওয়ার্ড যাচাই করা যায়নি: ' + err.message);
+    alert('Wrong Admin Password: ' + err.message);
     return;
   }
   if(!check.ok){
@@ -306,7 +306,7 @@ async function enterAdmin(){
   document.getElementById('landing').style.display='none';
   document.getElementById('adminPanel').style.display='block';
   document.getElementById('backBtn').style.display='inline-block';
-  document.getElementById('topTitle').textContent = '🛠️ অ্যাডমিন প্যানেল';
+  document.getElementById('topTitle').textContent = '🛠️ Admin';
   await refreshConfigUI();
 }
 
@@ -315,7 +315,7 @@ async function enterScanner(){
   document.getElementById('landing').style.display='none';
   document.getElementById('scannerPanel').style.display='block';
   document.getElementById('backBtn').style.display='inline-block';
-  document.getElementById('topTitle').textContent = '📷 ইনভিজিলেটর — QR স্ক্যানার';
+  document.getElementById('topTitle').textContent = '📷 Invigilator';
   try{
     cfg = await apiCall({action:'getConfig'});
     const yearSel = document.getElementById('scanYear');
@@ -378,7 +378,7 @@ async function saveExamConfig(){
   });
   try{
     await apiCall({action:'saveConfig', examName, years, expected});
-    alert('সংরক্ষিত হয়েছে। গুগল শিটে ট্যাব তৈরি হয়ে গেছে।');
+    alert('সংরক্ষিত হয়েছে');
     await refreshConfigUI();
   }catch(err){
     alert('সংরক্ষণ করা যায়নি: ' + err.message);
