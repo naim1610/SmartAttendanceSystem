@@ -76,22 +76,22 @@
   <!-- ============ LANDING / MODE SELECT ============ -->
   <div id="landing">
     <div class="card">
-      <h2>Web App Connection</h2>
-      <label>Web App URL [☠ Don't change!!]</p></label>
+      <h2>Web App সংযোগ</h2>
+      <label>Google Apps Script Web App URL</label>
       <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/.../exec">
       <div class="row-actions">
-        <button class="btn btn-primary btn-sm" onclick="testConnection()">🔌 Test Connection (under admin supervision)</button>
+        <button class="btn btn-primary btn-sm" onclick="testConnection()">🔌 সংযোগ পরীক্ষা করুন</button>
       </div>
       <div id="connStatus" style="margin-top:10px; font-size:13px;"><span class="status-dot status-wait"></span>সংযুক্ত নয়</div>
-      
+      <div class="hint">টিপ: প্রতিবার URL টাইপ এড়াতে চাইলে এই ফাইলের &lt;script&gt; ট্যাগের শুরুতে থাকা <code>DEFAULT_WEBAPP_URL</code> এ আপনার URL স্থায়ীভাবে বসিয়ে ফাইলটি সবার সাথে শেয়ার করুন।</div>
     </div>
 
     <div class="card">
-      <h2>Define Yourself</h2>
-      <button class="landing-btn" onclick="enterAdmin()">🛠️ Admin
+      <h2>আপনি কে?</h2>
+      <button class="landing-btn" onclick="enterAdmin()">🛠️ অ্যাডমিন প্যানেল
         <span class="sub">পরীক্ষা সেটআপ, রোল নম্বর নির্ধারণ, উপস্থিতি ড্যাশবোর্ড</span>
       </button>
-      <button class="landing-btn" onclick="enterScanner()">📷 Invigilator
+      <button class="landing-btn" onclick="enterScanner()">📷 ইনভিজিলেটর — QR স্ক্যানার
         <span class="sub">পরীক্ষার কক্ষে শিক্ষার্থীদের এডমিট কার্ডের QR স্ক্যান করে উপস্থিতি নিন</span>
       </button>
     </div>
@@ -111,7 +111,7 @@
       </div>
       <div id="expectedFields" style="margin-top:14px;"></div>
       <div class="row-actions">
-        <button class="btn btn-primary" onclick="saveExamConfig()">সংরক্ষণ করুন</button>
+        <button class="btn btn-primary" onclick="saveExamConfig()">সংরক্ষণ করুন (গুগল শিট তৈরি হবে)</button>
       </div>
     </div>
 
@@ -184,16 +184,11 @@
           <select id="scanYear"></select>
         </div>
         <div>
-          <label>বিভাগ</label>
-          <select id="scanGroup">
-            <option value="বিজ্ঞান">বিজ্ঞান</option>
-            <option value="মানবিক">মানবিক</option>
-            <option value="ব্যবসায় শিক্ষা">ব্যবসায় শিক্ষা</option>
-          </select>
+          <label>এই কক্ষে মোট শিক্ষার্থী সংখ্যা</label>
+          <input type="number" min="1" id="scanTotal" placeholder="যেমন: 35">
         </div>
       </div>
-      <label>এই কক্ষে মোট শিক্ষার্থী সংখ্যা</label>
-      <input type="number" min="1" id="scanTotal" placeholder="যেমন: 35">
+      <div class="hint">এক কক্ষে একাধিক বিভাগের শিক্ষার্থী থাকলেও সমস্যা নেই — QR কোড থেকেই বিভাগ স্বয়ংক্রিয়ভাবে শনাক্ত হবে।</div>
       <div class="row-actions">
         <button class="btn btn-primary" onclick="startScanning()">📷 স্ক্যান শুরু করুন</button>
       </div>
@@ -204,7 +199,12 @@
       <div id="qrReader"></div>
       <div id="scanBanner"></div>
       <div class="row-actions">
-        <input type="text" id="manualRoll" placeholder="QR না পড়লে রোল নম্বর টাইপ করুন" style="max-width:220px;">
+        <input type="text" id="manualRoll" placeholder="QR না পড়লে রোল নম্বর টাইপ করুন" style="max-width:180px;">
+        <select id="manualGroup" style="max-width:170px;">
+          <option value="বিজ্ঞান">বিজ্ঞান</option>
+          <option value="মানবিক">মানবিক</option>
+          <option value="ব্যবসায় শিক্ষা">ব্যবসায় শিক্ষা</option>
+        </select>
         <button class="btn btn-outline btn-sm" onclick="addManualRoll()">+ যুক্ত করুন</button>
         <button class="btn btn-outline btn-sm" onclick="stopScanning()">⏸ স্ক্যানার বন্ধ করুন</button>
       </div>
@@ -214,8 +214,17 @@
       <h2>স্ক্যান করা তালিকা — উপস্থিত (<span id="scanCount">0</span> জন)</h2>
       <div id="scanList"></div>
 
-      <label style="margin-top:16px;">অনুপস্থিত রোল (কমা দিয়ে আলাদা করুন)</label>
-      <input type="text" id="absentRolls" placeholder="যেমন: 5,12,23" oninput="updateTally()">
+      <label style="margin-top:16px;">অনুপস্থিত শিক্ষার্থী</label>
+      <div class="row-actions" style="margin-top:0;">
+        <input type="text" id="absentRollInput" placeholder="রোল নম্বর" style="max-width:150px;" onkeydown="if(event.key==='Enter') addAbsent();">
+        <select id="absentGroupInput" style="max-width:170px;">
+          <option value="বিজ্ঞান">বিজ্ঞান</option>
+          <option value="মানবিক">মানবিক</option>
+          <option value="ব্যবসায় শিক্ষা">ব্যবসায় শিক্ষা</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="addAbsent()" title="যুক্ত করুন">➕</button>
+      </div>
+      <div id="absentList"></div>
       <div class="hint" id="tallyHint"></div>
 
       <div class="row-actions">
@@ -229,11 +238,13 @@
 
 <script>
 // ==== একবার নিজে বসিয়ে পুরো ফাইল ইনভিজিলেটরদের সাথে শেয়ার করুন, তাহলে বারবার URL টাইপ করতে হবে না ====
-const DEFAULT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzJCP1HwbrKbtCr64mraCB5dyVHJ27tVUv0bL4NQ69sJu-PwgCkyVeFWAVcunenpHSDvA/exec";
+const DEFAULT_WEBAPP_URL = "";
 
 let WEBAPP_URL = DEFAULT_WEBAPP_URL;
+let adminPassword = ''; // সফল লগইনের পর মেমরিতে রাখা হয়, প্রতিটি অ্যাডমিন-অনুরোধে স্বয়ংক্রিয়ভাবে যুক্ত হয়
 let cfg = { examName:'', years:[], expected:{}, groups:['বিজ্ঞান','মানবিক','ব্যবসায় শিক্ষা'] };
-let scannedList = []; // {roll, name, time}
+let scannedList = []; // {roll, group, name, time}
+let absentList = []; // {roll, group}
 let html5QrCode = null;
 let scanning = false;
 
@@ -246,7 +257,7 @@ async function apiCall(payload){
   const res = await fetch(WEBAPP_URL, {
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'}, // preflight এড়াতে text/plain ব্যবহার করা হয়েছে
-    body: JSON.stringify(payload)
+    body: JSON.stringify({...payload, adminPassword})
   });
   const data = await res.json();
   if(data.error) throw new Error(data.error);
@@ -277,12 +288,12 @@ function goHome(){
 
 async function enterAdmin(){
   if(!ensureUrl()) return;
-  const pass = prompt('🔒 Admin Password:');
+  const pass = prompt('🔒 অ্যাডমিন পাসওয়ার্ড দিন:');
   if(pass === null) return; // ব্যবহারকারী বাতিল করেছে
   if(!pass.trim()){ alert('পাসওয়ার্ড খালি রাখা যাবে না।'); return; }
   let check;
   try{
-    check = await apiCall({action:'adminAuth', password: pass});
+    check = await apiCall({action:'adminLogin', adminPassword: pass});
   }catch(err){
     alert('পাসওয়ার্ড যাচাই করা যায়নি: ' + err.message);
     return;
@@ -291,6 +302,7 @@ async function enterAdmin(){
     alert('❌ ভুল পাসওয়ার্ড। অ্যাডমিন প্যানেলে প্রবেশাধিকার নেই।');
     return;
   }
+  adminPassword = pass; // পরবর্তী প্রতিটি অ্যাডমিন-অনুরোধে স্বয়ংক্রিয়ভাবে ব্যবহৃত হবে
   document.getElementById('landing').style.display='none';
   document.getElementById('adminPanel').style.display='block';
   document.getElementById('backBtn').style.display='inline-block';
@@ -718,10 +730,9 @@ async function startScanning(){
   const date = document.getElementById('scanDate').value;
   const room = document.getElementById('scanRoom').value.trim();
   const year = document.getElementById('scanYear').value;
-  const group = document.getElementById('scanGroup').value;
   const total = parseInt(document.getElementById('scanTotal').value, 10);
-  if(!date || !room || !year || !group || !total || total<1){
-    alert('তারিখ, কক্ষ নম্বর, বর্ষ, বিভাগ ও মোট শিক্ষার্থী সংখ্যা — সব দিন।');
+  if(!date || !room || !year || !total || total<1){
+    alert('তারিখ, কক্ষ নম্বর, বর্ষ ও মোট শিক্ষার্থী সংখ্যা — সব দিন।');
     return;
   }
 
@@ -741,7 +752,9 @@ async function startScanning(){
   document.getElementById('scanCard').style.display='block';
   document.getElementById('listCard').style.display='block';
   scannedList = [];
+  absentList = [];
   renderScanList();
+  renderAbsentList();
 
   try{
     html5QrCode = new Html5Qrcode('qrReader');
@@ -771,33 +784,39 @@ async function startScanning(){
 }
 
 function onScanSuccess(decodedText){
-  // এডমিট কার্ডের QR কোড এখন শুধু রোল নম্বর ধারণ করে (প্লেইন টেক্সট)।
-  // আগে তৈরি করা কার্ডের QR-এ JSON ফরম্যাট ({n,r,d,y}) থাকতে পারে — সেক্ষেত্রেও
-  // যাতে কাজ করে, তাই প্রথমে JSON হিসেবে পার্স করার চেষ্টা করা হয়, ব্যর্থ হলে
-  // পুরো টেক্সটকেই রোল নম্বর ধরা হয়।
-  let roll = (decodedText || '').trim();
-  let name = '';
+  // এডমিট কার্ডের QR কোড এখন রোল ও বিভাগ দুটোই JSON আকারে ধারণ করে: {"r":"142","d":"বিজ্ঞান"}।
+  // আগে তৈরি করা কার্ডের QR প্লেইন রোল নম্বর বা {n,r,d,y} ফরম্যাটেও থাকতে পারে — সেক্ষেত্রে
+  // বিভাগের তথ্য না থাকলে স্বয়ংক্রিয়ভাবে সঠিক শিটে বসানো যাবে না, তাই সেটি এড়িয়ে সতর্ক করা হয়।
+  let roll = '', group = '', name = '';
   try{
     const payload = JSON.parse(decodedText);
-    if(payload && payload.r){ roll = String(payload.r).trim(); name = payload.n || ''; }
-  }catch(e){ /* প্লেইন রোল নম্বর — এটাই স্বাভাবিক ও প্রত্যাশিত */ }
+    if(payload && payload.r){
+      roll = String(payload.r).trim();
+      group = payload.d || '';
+      name = payload.n || '';
+    }
+  }catch(e){ /* JSON নয় — নিচে হ্যান্ডল করা হচ্ছে */ }
 
   if(!roll){
     showScanBanner('banner-err', 'QR কোড থেকে রোল নম্বর পড়া যায়নি।');
     return;
   }
-  addScan(roll, name);
+  if(!group){
+    showScanBanner('banner-warn', `⚠️ QR কোডে বিভাগের তথ্য নেই (পুরনো ফরম্যাটের কার্ড)। রোল ${roll}-কে নিচে ম্যানুয়ালি বিভাগ বেছে যুক্ত করুন।`);
+    return;
+  }
+  addScan(roll, group, name);
 }
 
-function addScan(roll, name){
+function addScan(roll, group, name){
   if(scannedList.some(s=>String(s.roll)===String(roll))){
     showScanBanner('banner-warn', `রোল ${roll} ইতিমধ্যে তালিকায় আছে।`);
     return;
   }
-  scannedList.push({roll, name: name||'', time: new Date().toLocaleTimeString('bn-BD')});
+  scannedList.push({roll, group, name: name||'', time: new Date().toLocaleTimeString('bn-BD')});
   beep();
   if(navigator.vibrate) navigator.vibrate(100);
-  showScanBanner('banner-ok', `✅ যুক্ত হয়েছে: রোল ${roll}${name?' — '+name:''}`);
+  showScanBanner('banner-ok', `✅ যুক্ত হয়েছে: রোল ${roll} — ${group}${name?' — '+name:''}`);
   renderScanList();
 }
 
@@ -810,8 +829,9 @@ function showScanBanner(cls, msg){
 function addManualRoll(){
   const input = document.getElementById('manualRoll');
   const roll = input.value.trim();
+  const group = document.getElementById('manualGroup').value;
   if(!roll){ return; }
-  addScan(roll, '');
+  addScan(roll, group, '');
   input.value = '';
 }
 
@@ -828,28 +848,57 @@ function renderScanList(){
   } else {
     wrap.innerHTML = scannedList.map(s=>`
       <div class="scan-list-item">
-        <span>রোল <b>${s.roll}</b>${s.name?' — '+s.name:''} <span style="color:#999;">(${s.time})</span></span>
+        <span>রোল <b>${s.roll}</b> — ${s.group}${s.name?' — '+s.name:''} <span style="color:#999;">(${s.time})</span></span>
         <span class="del" onclick="removeScan('${s.roll}')">×</span>
       </div>`).join('');
   }
   updateTally();
 }
 
-function parseAbsentInput(){
-  const raw = document.getElementById('absentRolls').value.trim();
-  if(!raw) return [];
-  return raw.split(',').map(r=>r.trim()).filter(r=>r!=='');
+function addAbsent(){
+  const input = document.getElementById('absentRollInput');
+  const roll = input.value.trim();
+  const group = document.getElementById('absentGroupInput').value;
+  if(!roll){ return; }
+  if(absentList.some(a=>String(a.roll)===String(roll))){
+    alert(`রোল ${roll} ইতিমধ্যে অনুপস্থিত তালিকায় আছে।`);
+    return;
+  }
+  absentList.push({roll, group});
+  input.value = '';
+  input.focus();
+  renderAbsentList();
+}
+
+function removeAbsent(roll){
+  absentList = absentList.filter(a=>String(a.roll)!==String(roll));
+  renderAbsentList();
+}
+
+function renderAbsentList(){
+  const wrap = document.getElementById('absentList');
+  if(!wrap) return;
+  if(absentList.length===0){
+    wrap.innerHTML = '<div class="hint">এখনো কোনো অনুপস্থিত শিক্ষার্থী যুক্ত করা হয়নি।</div>';
+  } else {
+    wrap.innerHTML = absentList.map(a=>`
+      <div class="scan-list-item">
+        <span>রোল <b>${a.roll}</b> — ${a.group}</span>
+        <span class="del" onclick="removeAbsent('${a.roll}')">×</span>
+      </div>`).join('');
+  }
+  updateTally();
 }
 
 // উপস্থিত + অনুপস্থিত মিলিয়ে মোট শিক্ষার্থী সংখ্যার সাথে মিলছে কিনা যাচাই করে
 function getTallyStatus(){
   const total = parseInt(document.getElementById('scanTotal').value, 10) || 0;
   const presentRolls = scannedList.map(s=>String(s.roll));
-  const absentRolls = parseAbsentInput();
-  const overlap = absentRolls.filter(r=>presentRolls.includes(String(r)));
+  const absentRolls = absentList.map(a=>String(a.roll));
+  const overlap = absentRolls.filter(r=>presentRolls.includes(r));
   const dupAbsent = absentRolls.filter((r,i)=>absentRolls.indexOf(r)!==i);
   const sum = presentRolls.length + absentRolls.length;
-  return { total, presentCount: presentRolls.length, absentRolls, overlap, dupAbsent, sum, ok: total>0 && sum===total && overlap.length===0 && dupAbsent.length===0 };
+  return { total, presentCount: presentRolls.length, absentRolls, absentEntries: absentList, overlap, dupAbsent, sum, ok: total>0 && sum===total && overlap.length===0 && dupAbsent.length===0 };
 }
 
 function updateTally(){
@@ -897,25 +946,25 @@ async function submitScans(){
   const date = document.getElementById('scanDate').value;
   const room = document.getElementById('scanRoom').value.trim();
   const year = document.getElementById('scanYear').value;
-  const group = document.getElementById('scanGroup').value;
   try{
     const res = await apiCall({
-      action:'submitAttendance', date, room, year, group,
+      action:'submitAttendance', date, room, year,
       time: new Date().toISOString(),
-      rolls: scannedList.map(s=>s.roll),
-      absentRolls: t.absentRolls
+      presentRolls: scannedList.map(s=>({roll:s.roll, group:s.group})),
+      absentRolls: t.absentEntries
     });
     let msg = `সফলভাবে সাবমিট হয়েছে: উপস্থিত ${res.result.success.length} জন, অনুপস্থিত ${res.result.absent.length} জন।`;
     if(res.result.notFound.length){
-      msg += `\n\nতালিকায় পাওয়া যায়নি এমন রোল (${group}/${year} শিটে নেই): ${res.result.notFound.join(', ')}`;
+      msg += `\n\nতালিকায় পাওয়া যায়নি এমন রোল (${year}-এর কোনো বিভাগের শিটেই নেই): ${res.result.notFound.join(', ')}`;
     }
     alert(msg);
     await stopScanning();
     scannedList = [];
+    absentList = [];
     renderScanList();
+    renderAbsentList();
     document.getElementById('scanRoom').value='';
     document.getElementById('scanTotal').value='';
-    document.getElementById('absentRolls').value='';
   }catch(err){
     alert('সাবমিট করা যায়নি: ' + err.message + '\nইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন — তালিকা মুছে যায়নি।');
   }
