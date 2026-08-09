@@ -257,7 +257,7 @@ async function apiCall(payload){
   const res = await fetch(WEBAPP_URL, {
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'}, // preflight এড়াতে text/plain ব্যবহার করা হয়েছে
-    body: JSON.stringify({...payload, adminPassword})
+    body: JSON.stringify({...payload, adminPassword: (payload.adminPassword !== undefined ? payload.adminPassword : adminPassword)})
   });
   const data = await res.json();
   if(data.error) throw new Error(data.error);
